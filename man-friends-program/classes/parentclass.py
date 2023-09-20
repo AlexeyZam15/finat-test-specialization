@@ -5,8 +5,8 @@ class ParentClass:
     __id_counter = 0
 
     def __init__(self, name: str, birthday: str):
-        self.__id_counter += 1
-        self.__id = self.__id_counter
+        ParentClass.__id_counter += 1
+        self.__id = ParentClass.__id_counter
         self.__name = name
         DateCheck.is_date(birthday)
         self.__birthday = birthday
