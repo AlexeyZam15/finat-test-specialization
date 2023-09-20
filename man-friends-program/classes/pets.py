@@ -1,5 +1,3 @@
-from datetime import date
-
 from classes.parentclass import ParentClass
 
 

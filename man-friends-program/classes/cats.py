@@ -1,11 +1,11 @@
-from aux_modules.dogsbreedcheck import DogsBreedCheck
+from aux_modules.catsbreedcheck import CatsBreedCheck
 from classes.pets import Pet
 
 
-class Dog(Pet):
+class Cat(Pet):
     def __init__(self, name: str, birthday: str, learned_commands: str, breed: str):
         super().__init__(name, birthday, learned_commands)
-        DogsBreedCheck().is_dog_breed(breed)
+        CatsBreedCheck().is_cat_breed(breed)
         self.__breed = breed
 
     @property
