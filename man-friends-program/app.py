@@ -5,6 +5,7 @@ from classes.donkeys import Donkey
 from classes.hamsters import Hamster
 from classes.horses import Horse
 from classes.parentclass import ParentClass
+from counter import Counter
 from data import Data
 
 
@@ -54,12 +55,14 @@ class App:
                                       "хомяк": Hamster,
                                       }
 
+        self.counter = Counter()
+
     def __choose_input(self, actions: dir, functions: dir, text: str, parameters: dir = None):
         action = None
-        while action not in self.__actions and action != 'q':
+        while action not in actions and action != 'q':
             print(text, *[f'{i} - {actions[i]}' for i in actions], 'q - выход')
             action = input()
-            if action not in self.__actions and action != 'q':
+            if action not in actions and action != 'q':
                 print('Введены неверные данные')
         if action != 'q':
             if not parameters:
@@ -96,12 +99,15 @@ class App:
             return False
 
     def show_all(self):
-        print(*[f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
-        for i in self.__data:
-            print(f'{i.id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|'
-                  f'{i.birthday:{ParentClass.field_width["Дата рождения"]}}|'
-                  f'{i.class_name:{ParentClass.field_width["Класс"]}}|{i.breed:{ParentClass.field_width["Порода"]}}|'
-                  f'{i.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
+        if len(self.__data):
+            print(*[f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
+            for i in self.__data:
+                print(f'{i.id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|'
+                      f'{i.birthday:{ParentClass.field_width["Дата рождения"]}}|'
+                      f'{i.class_name:{ParentClass.field_width["Класс"]}}|{i.breed:{ParentClass.field_width["Порода"]}}|'
+                      f'{i.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
+        else:
+            print("Список животных пуст")
 
     def add_new(self):
         action = self.__choose_input(self.__child_classes_names, self.__child_classes_functions,
@@ -119,6 +125,10 @@ class App:
         if not data:
             data = self.__input_fields(class_name.input_fields)
         child = class_name(*data)
+
+        with self.counter as cnt:
+            cnt.add()
+
         self.__data.append(child)
         with open(self.__path, mode='w', encoding="utf-8") as data:
             content = '"Id";"Имя";"Дата рождения";"Класс";"Порода";"Выученные команды"\n'
@@ -131,8 +141,6 @@ class App:
         animal: ParentClass = self.__data.get_by_param("id", id_value)
         if animal:
             command = input("Введите название новой команды: ")
-            print(animal.learned_commands)
             animal.learned_commands += f", {command}"
         else:
             print('Введён неверный id')
-
