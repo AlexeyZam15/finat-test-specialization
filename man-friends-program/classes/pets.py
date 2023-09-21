@@ -5,6 +5,7 @@ class Pet(ParentClass):
     def __init__(self, name: str, birthday: str, learned_commands: str):
         super().__init__(name, birthday)
         self.__learned_commands = learned_commands
+        self.__input_fields = self.input_fields + ["выученные команды"]
 
     @property
     def learned_commands(self):

@@ -4,6 +4,8 @@ from aux_modules.datecheck import DateCheck
 class ParentClass:
     __id_counter = 0
 
+    input_fields = ["Имя", "Дата рождения"]
+
     def __init__(self, name: str, birthday: str):
         ParentClass.__id_counter += 1
         self.__id = ParentClass.__id_counter

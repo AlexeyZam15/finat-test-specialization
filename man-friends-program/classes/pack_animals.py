@@ -2,16 +2,16 @@ from classes.parentclass import ParentClass
 
 
 class PackAnimal(ParentClass):
-    def __init__(self, name: str, birthday: str, capacity_kg: int):
+    input_fields = ParentClass.input_fields + ["выученные команды"]
+
+    def __init__(self, name: str, birthday: str, learned_commands: str):
         super().__init__(name, birthday)
-        if not isinstance(capacity_kg, int):
-            raise ValueError("Грузоподъёмность не является числом")
-        self.__capacity_kg = capacity_kg
+        self.__learned_commands = learned_commands
 
     @property
-    def capacity_kg(self):
-        return self.__capacity_kg
+    def learned_commands(self):
+        return self.__learned_commands
 
     def __str__(self):
         return f'''{super().__str__()}
-Грузоподъёмность: {self.__capacity_kg} кг'''
+Выученные команды: {self.__learned_commands}'''

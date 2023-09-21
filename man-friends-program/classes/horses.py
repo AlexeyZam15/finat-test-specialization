@@ -3,8 +3,8 @@ from classes.pack_animals import PackAnimal
 
 
 class Horse(PackAnimal):
-    def __init__(self, name: str, birthday: str, capacity_kg: int, breed: str):
-        super().__init__(name, birthday, capacity_kg)
+    def __init__(self, name: str, birthday: str, learned_commands: str, breed: str):
+        super().__init__(name, birthday, learned_commands)
         HorsesBreedCheck().is_horse_breed(breed)
         self.__breed = breed
 
