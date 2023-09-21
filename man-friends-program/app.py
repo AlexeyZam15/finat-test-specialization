@@ -12,17 +12,13 @@ class App:
     def __init__(self, file_path: str):
         self.__data = Data(list[ParentClass]())
 
-        self.__actions = {'1': 'список',
-                          '2': 'добавить',
-                          '3': 'поиск',
-                          '4': 'изменение',
-                          '5': 'удаление'}
+        self.__actions = {'1': 'список животных',
+                          '2': 'добавить животное',
+                          '3': 'обучить команде'}
 
         self.__functions = {'1': self.show_all,
                             '2': self.add_new,
-                            '3': self.add_new,
-                            '4': self.add_new,
-                            '5': self.add_new}
+                            '3': self.teach_command}
 
         self.__path = file_path
 
@@ -89,7 +85,9 @@ class App:
                         raise IOError(f"Ошибка с чтением данных из csv файла {self.__path}")
 
     def start(self):
+        self.__data = Data(list[ParentClass]())
         open(self.__path, mode="a")
+        print("Программа реестра животных запущена")
         self.__read_data_clv()
         action = True
         while action:
@@ -128,4 +126,13 @@ class App:
                 content += f"{i.id};{i.name};{i.birthday};{i.class_name};{i.breed};{i.learned_commands}\n"
             data.write(content)
 
-    # def find(self):
+    def teach_command(self):
+        id_value = input("Введите id животного, которого хотите научить команде: ")
+        animal: ParentClass = self.__data.get_by_param("id", id_value)
+        if animal:
+            command = input("Введите название новой команды: ")
+            print(animal.learned_commands)
+            animal.learned_commands += f", {command}"
+        else:
+            print('Введён неверный id')
+

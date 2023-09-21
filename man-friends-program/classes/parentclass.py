@@ -55,6 +55,10 @@ class ParentClass:
     def learned_commands(self):
         return self.__learned_commands
 
+    @learned_commands.setter
+    def learned_commands(self, new_value):
+        self.__learned_commands = new_value
+
     @property
     def breed(self):
         return self.__breed
