@@ -8,6 +8,7 @@ class Dog(Pet):
         DogsBreedCheck().is_dog_breed(breed)
         self.__breed = breed
         self.class_name = "собака"
+        self.learned_commands = learned_commands
 
     @property
     def breed(self):

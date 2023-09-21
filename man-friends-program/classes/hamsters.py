@@ -8,6 +8,7 @@ class Hamster(Pet):
         HamstersBreedCheck().is_hamster_breed(breed)
         self.__breed = breed
         self.class_name = "хомяк"
+        self.learned_commands = learned_commands
 
     @property
     def breed(self):

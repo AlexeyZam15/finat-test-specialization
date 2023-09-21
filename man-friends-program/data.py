@@ -21,3 +21,8 @@ class Data:
 
     def __len__(self):
         return len(self.__data)
+
+    def get_by_param(self, param_name: str, param_value: any):
+        for i in self.__data:
+            if str(getattr(i, param_name)) == str(param_value):
+                return i

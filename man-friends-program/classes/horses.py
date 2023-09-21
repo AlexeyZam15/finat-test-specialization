@@ -8,6 +8,7 @@ class Horse(PackAnimal):
         HorsesBreedCheck().is_horse_breed(breed)
         self.__breed = breed
         self.class_name = "лошадь"
+        self.learned_commands = learned_commands
 
     @property
     def breed(self):

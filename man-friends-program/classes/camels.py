@@ -9,6 +9,7 @@ class Camel(PackAnimal):
         CamelsBreedCheck().is_camel_breed(breed)
         self.__breed = breed
         self.class_name = "верблюд"
+        self.learned_commands = learned_commands
 
     @property
     def breed(self):

@@ -8,6 +8,7 @@ class Donkey(PackAnimal):
         DonkeysBreedCheck().is_donkey_breed(breed)
         self.__breed = breed
         self.class_name = "осёл"
+        self.learned_commands = learned_commands
 
     @property
     def breed(self):

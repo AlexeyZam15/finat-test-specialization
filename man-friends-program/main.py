@@ -1,12 +1,6 @@
 import traceback
 
 from app import App
-from classes.camels import Camel
-from classes.cats import Cat
-from classes.dogs import Dog
-from classes.donkeys import Donkey
-from classes.hamsters import Hamster
-from classes.horses import Horse
 
 
 def main():
