@@ -2,7 +2,7 @@ from classes.parentclass import ParentClass
 
 
 class PackAnimal(ParentClass):
-    input_fields = ParentClass.input_fields + ["выученные команды"]
+    input_fields = ParentClass.input_fields + ["Выученные команды", "Порода"]
 
     def __init__(self, name: str, birthday: str, learned_commands: str):
         super().__init__(name, birthday)
@@ -11,7 +11,3 @@ class PackAnimal(ParentClass):
     @property
     def learned_commands(self):
         return self.__learned_commands
-
-    def __str__(self):
-        return f'''{super().__str__()}
-Выученные команды: {self.__learned_commands}'''
