@@ -1,14 +1,15 @@
 import traceback
 
-from app import App
+from animalregistryapp import AnimalRegistryApp
+from views.console_view import ConsoleView
 
 
 def main():
-    app = App("man-friends.clv")
+    ar_app = AnimalRegistryApp("man-friends.clv", ConsoleView)
     input_mode = True
     while input_mode:
         try:
-            input_mode = app.start()
+            input_mode = ar_app.start()
         except IOError:
             traceback.print_exc()
             input_mode = False
