@@ -7,11 +7,14 @@ from classes.horses import Horse
 from classes.parentclass import ParentClass
 from counter import Counter
 from data import Data
+from filemanager import FileManager
 
 
-class App:
-    def __init__(self, file_path: str):
+class AnimalRegistryApp:
+    def __init__(self, file_path: str, view):
         self.__data = Data(list[ParentClass]())
+
+        self.__view = view
 
         self.__actions = {'1': 'список животных',
                           '2': 'добавить животное',
@@ -21,7 +24,10 @@ class App:
                             '2': self.add_new,
                             '3': self.teach_command}
 
-        self.__path = file_path
+        try:
+            self.__file_manager = FileManager(file_path)
+        except:
+            raise IOError("Ошибка работы с файлом " + file_path)
 
         self.__child_classes_names = {"1": "Верблюд",
                                       "2": "Лошадь",
@@ -57,13 +63,15 @@ class App:
 
         self.counter = Counter()
 
+        self.title = "Программа работы с реестром животных"
+
     def __choose_input(self, actions: dir, functions: dir, text: str, parameters: dir = None):
         action = None
         while action not in actions and action != 'q':
-            print(text, *[f'{i} - {actions[i]}' for i in actions], 'q - выход')
-            action = input()
+            self.__view.print_msg(text + " " + " ".join([f'{i} - {actions[i]}' for i in actions]) + ' q - выход')
+            action = self.__view.input_func()
             if action not in actions and action != 'q':
-                print('Введены неверные данные')
+                self.__view.print_msg('Введены неверные данные')
         if action != 'q':
             if not parameters:
                 functions[action]()
@@ -73,25 +81,10 @@ class App:
             return False
         return True
 
-    def __read_data_clv(self):
-        with open(self.__path, mode='r', encoding='utf-8') as file:
-            data_lines = file.read().splitlines()
-            if len(data_lines) > 1:
-                for line in data_lines[1:]:
-                    try:
-                        data = line.split(";")
-                        if data[3] != "Не определено":
-                            self.create_child(self.__child_classes_ratio[data[3]], data[1:3] + data[4:6])
-                        else:
-                            self.create_child(ParentClass, data[1:3] + data[4:6])
-                    except Exception as e:
-                        raise IOError(f"Ошибка с чтением данных из csv файла {self.__path}")
-
     def start(self):
         self.__data = Data(list[ParentClass]())
-        open(self.__path, mode="a")
-        print("Программа реестра животных запущена")
-        self.__read_data_clv()
+        ParentClass.id_counter_reset()
+        self.__file_manager.create_objects_from_clv(self.create_child, self.__child_classes_ratio, ParentClass)
         action = True
         while action:
             action = self.__choose_input(self.__actions, self.__functions, 'Какое действие хотите совершить?')
@@ -100,25 +93,25 @@ class App:
 
     def show_all(self):
         if len(self.__data):
-            print(*[f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
+            text = " ".join([f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
             for i in self.__data:
-                print(f'{i.id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|'
-                      f'{i.birthday:{ParentClass.field_width["Дата рождения"]}}|'
-                      f'{i.class_name:{ParentClass.field_width["Класс"]}}|{i.breed:{ParentClass.field_width["Порода"]}}|'
-                      f'{i.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
+                text += (f'\n{i.id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|' +
+                         f'{i.birthday:{ParentClass.field_width["Дата рождения"]}}|' +
+                         f'{i.class_name:{ParentClass.field_width["Класс"]}}|{i.breed:{ParentClass.field_width["Порода"]}}|' +
+                         f'{i.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
+            self.__view.print_msg(text)
         else:
-            print("Список животных пуст")
+            self.__view.print_msg("Список животных пуст")
 
     def add_new(self):
         action = self.__choose_input(self.__child_classes_names, self.__child_classes_functions,
                                      'Выберите класс нового животного:', self.__child_classes_parameters)
 
-    @staticmethod
-    def __input_fields(input_fields: list):
-        print('Заполните поля:')
+    def __input_fields(self, input_fields: list):
+        self.__view.print_msg('Заполните поля:')
         data = []
         for i in range(len(input_fields)):
-            data.append(input(f'{input_fields[i]}: '))
+            data.append(self.__view.input_func(f'{input_fields[i]}: '))
         return data
 
     def create_child(self, class_name, data: list = None):
@@ -130,17 +123,18 @@ class App:
             cnt.add()
 
         self.__data.append(child)
-        with open(self.__path, mode='w', encoding="utf-8") as data:
-            content = '"Id";"Имя";"Дата рождения";"Класс";"Порода";"Выученные команды"\n'
-            for i in self.__data:
-                content += f"{i.id};{i.name};{i.birthday};{i.class_name};{i.breed};{i.learned_commands}\n"
-            data.write(content)
+
+        self.__file_manager.write_data_to_file(self.__data)
 
     def teach_command(self):
-        id_value = input("Введите id животного, которого хотите научить команде: ")
+        id_value = self.__view.input_func("Введите id животного, которого хотите научить команде: ")
         animal: ParentClass = self.__data.get_by_param("id", id_value)
         if animal:
-            command = input("Введите название новой команды: ")
-            animal.learned_commands += f", {command}"
+            command = self.__view.input_func("Введите название новой команды: ")
+            if animal.learned_commands:
+                animal.learned_commands += f", {command}"
+            else:
+                animal.learned_commands = f"{command}"
         else:
-            print('Введён неверный id')
+            self.__view.print_msg('Введён неверный id')
+        self.__file_manager.write_data_to_file(self.__data)

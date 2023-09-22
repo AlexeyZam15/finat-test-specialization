@@ -72,3 +72,7 @@ class ParentClass:
         self.__class_name = new_name
         if len(self.__class_name) > ParentClass.field_width["Класс"] - 1:
             ParentClass.field_width["Класс"] = len(self.__class_name) + 1
+
+    @staticmethod
+    def id_counter_reset():
+        ParentClass.__id_counter = 0
