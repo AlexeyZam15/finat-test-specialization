@@ -11,10 +11,11 @@ from filemanager import FileManager
 
 
 class AnimalRegistryApp:
-    def __init__(self, file_path: str, view):
+    def __init__(self, file_path: str, view_class_name):
+        self.__view = None
         self.__data = Data(list[ParentClass]())
 
-        self.__view = view
+        self.__view_class_name = view_class_name
 
         self.__actions = {'1': 'список животных',
                           '2': 'добавить животное',
@@ -63,31 +64,18 @@ class AnimalRegistryApp:
 
         self.counter = Counter()
 
-        self.title = "Программа работы с реестром животных"
-
-    def __choose_input(self, actions: dir, functions: dir, text: str, parameters: dir = None):
-        action = None
-        while action not in actions and action != 'q':
-            self.__view.print_msg(text + " " + " ".join([f'{i} - {actions[i]}' for i in actions]) + ' q - выход')
-            action = self.__view.input_func()
-            if action not in actions and action != 'q':
-                self.__view.print_msg('Введены неверные данные')
-        if action != 'q':
-            if not parameters:
-                functions[action]()
-            else:
-                functions[action](parameters[action])
-        else:
-            return False
-        return True
+        self.__title = "Реестр животных"
 
     def start(self):
+        self.__view = self.__view_class_name()
+
+        self.__view.set_program_title(self.__title)
         self.__data = Data(list[ParentClass]())
         ParentClass.id_counter_reset()
         self.__file_manager.create_objects_from_clv(self.create_child, self.__child_classes_ratio, ParentClass)
         action = True
         while action:
-            action = self.__choose_input(self.__actions, self.__functions, 'Какое действие хотите совершить?')
+            action = self.__view.choose_input(self.__actions, self.__functions, 'Какое действие хотите совершить?')
         if not action:
             return False
 
@@ -104,8 +92,8 @@ class AnimalRegistryApp:
             self.__view.print_msg("Список животных пуст")
 
     def add_new(self):
-        action = self.__choose_input(self.__child_classes_names, self.__child_classes_functions,
-                                     'Выберите класс нового животного:', self.__child_classes_parameters)
+        action = self.__view.choose_input(self.__child_classes_names, self.__child_classes_functions,
+                                          'Выберите класс нового животного:', self.__child_classes_parameters)
 
     def __input_fields(self, input_fields: list):
         self.__view.print_msg('Заполните поля:')
