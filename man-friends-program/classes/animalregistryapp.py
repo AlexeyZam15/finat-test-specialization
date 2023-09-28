@@ -5,9 +5,9 @@ from classes.donkeys import Donkey
 from classes.hamsters import Hamster
 from classes.horses import Horse
 from classes.parentclass import ParentClass
-from counter import Counter
-from data import Data
-from filemanager import FileManager
+from aux_modules.counter import Counter
+from aux_modules.data import Data
+from aux_modules.filemanager import FileManager
 
 
 class AnimalRegistryApp:

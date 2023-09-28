@@ -26,3 +26,6 @@ class Data:
         for i in self.__data:
             if str(getattr(i, param_name)) == str(param_value):
                 return i
+
+    def remove(self, item):
+        self.__data.remove(item)
