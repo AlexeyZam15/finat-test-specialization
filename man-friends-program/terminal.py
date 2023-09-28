@@ -1,6 +1,6 @@
 import traceback
 
-from animalregistryapp import AnimalRegistryApp
+from classes.animalregistryapp import AnimalRegistryApp
 from views.console_view import ConsoleView
 
 
