@@ -5,7 +5,7 @@ from views.console_view import ConsoleView
 
 
 def main():
-    ar_app = AnimalRegistryApp("man-friends.clv", ConsoleView)
+    ar_app = AnimalRegistryApp("man-friends.csv", ConsoleView)
     input_mode = True
     while input_mode:
         try:
