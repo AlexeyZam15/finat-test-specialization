@@ -36,7 +36,7 @@ Window.title = "Реестр животных"
 class AnimalRegistry:
     def __init__(self):
         try:
-            self.__file_manager = FileManager("man-friends2.clv")
+            self.__file_manager = FileManager("man-friends2.csv")
         except IOError as e:
             raise IOError("Ошибка работы с файлом " + e.filename)
 
