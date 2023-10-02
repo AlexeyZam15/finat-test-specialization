@@ -16,9 +16,11 @@ class FileManager:
                     except Exception as e:
                         raise IOError(f"Ошибка с чтением данных из csv файла {self.__path}")
 
-    def write_data_to_file(self, data):
+    def write_data_to_file(self, data, data_cols_names: list[str], data_cols_params: list[str]):
         with open(self.__path, mode='w', encoding="utf-8") as file:
-            content = '"Id";"Имя";"Дата рождения";"Класс";"Порода";"Выученные команды"\n'
+            if data_cols_names:
+                data_cols = [f'"{i}"' for i in data_cols_names]
+                content = f'{";".join(data_cols)}\n'
             for i in data:
-                content += f"{i.id};{i.name};{i.birthday};{i.class_name};{i.breed};{i.learned_commands}\n"
+                content += f"{';'.join([str(getattr(i, j)) for j in data_cols_params])}\n"
             file.write(content)

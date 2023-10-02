@@ -7,13 +7,13 @@ class ParentClass:
     input_fields = ["Имя", "Дата рождения"]
 
     fields_names_ids = {"Id": "Id",
-                        "Имя": "Name",
-                        "Дата рождения": "Birthdate",
-                        "Класс": "Class",
-                        "Порода": "Breed",
-                        "Выученные команды": "Learned_commands"}
+                        "Имя": "name",
+                        "Дата рождения": "birthday",
+                        "Класс": "class_name",
+                        "Порода": "breed",
+                        "Выученные команды": "learned_commands"}
 
-    required_input_fields = ["Name", "Birthdate", "Breed", "Learned_commands"]
+    required_input_fields = ["name", "birthday", "breed", "learned_commands"]
 
     field_width = {"Id": 3,
                    "Имя": 4,
@@ -25,7 +25,7 @@ class ParentClass:
     def __init__(self, name: str, birthday: str):
         if not name:
             raise ValueError("Имя не может быть пустым")
-        DateCheck.is_date(birthday)
+        birthday = DateCheck.is_date(birthday)
         ParentClass.__id_counter += 1
         self.__id = ParentClass.__id_counter
         if len(self.__id.__str__()) > ParentClass.field_width["Id"] - 1:
@@ -42,7 +42,7 @@ class ParentClass:
 
     def __str__(self):
         text = " ".join([f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
-        text += (((f'\n{self.id:{ParentClass.field_width["Id"]}}|{self.name:{ParentClass.field_width["Имя"]}}|'
+        text += (((f'\n{self.Id:{ParentClass.field_width["Id"]}}|{self.name:{ParentClass.field_width["Имя"]}}|'
                    + f'{self.birthday:{ParentClass.field_width["Дата рождения"]}}|')
                   + f'{self.class_name:{ParentClass.field_width["Класс"]}}|{self.breed:{ParentClass.field_width["Порода"]}}|')
                  + f'{self.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
@@ -57,7 +57,7 @@ class ParentClass:
         return self.__birthday
 
     @property
-    def id(self):
+    def Id(self):
         return self.__id
 
     @property

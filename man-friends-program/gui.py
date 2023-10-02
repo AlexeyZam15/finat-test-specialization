@@ -20,7 +20,7 @@ from classes.hamsters import Hamster
 from classes.horses import Horse
 from classes.parentclass import ParentClass
 from aux_modules.counter import Counter
-from aux_modules.data import Data
+from classes.data import Data
 from aux_modules.filemanager import FileManager
 from functools import partial
 from kivy.clock import Clock
@@ -74,12 +74,13 @@ class AnimalRegistry:
 
         self._data.append(child)
 
-        self.__file_manager.write_data_to_file(self._data)
+        self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
 
     def _teach(self, animals_ids: list, new_command: str):
         error_text = ""
         for i in animals_ids:
-            animal = self._data.get_by_param('id', i)
+            animal = self._data.get_by_param('Id', i)
             if new_command in animal.learned_commands:
                 error_text += f"{animal.class_name} {animal.name} уже знает команду {new_command}\n"
                 continue
@@ -88,7 +89,8 @@ class AnimalRegistry:
             else:
                 animal.learned_commands = f"{new_command}"
 
-        self.__file_manager.write_data_to_file(self._data)
+        self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
         if error_text:
             raise ValueError(error_text)
 
@@ -96,11 +98,11 @@ class AnimalRegistry:
         pass
 
     def _animals_delete(self, animals_ids):
-        print(animals_ids)
         for i in animals_ids:
-            animal = self._data.get_by_param('id', i)
+            animal = self._data.get_by_param('Id', i)
             self._data.remove(animal)
-        self.__file_manager.write_data_to_file(self._data)
+        self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
 
 
 class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
@@ -211,7 +213,7 @@ class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
                 ],
             )
         try:
-            self._create_child(self.__get_class_by_name(text_fields_greed.ids.Class.text),
+            self._create_child(self.__get_class_by_name(text_fields_greed.ids.class_name.text),
                                data)
         except Exception as e:
             self._adding_alert.title = str(e)
@@ -223,7 +225,7 @@ class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
         self._view.row_data = self._get_data()
 
     def _get_data(self):
-        return [(i.id, i.name, i.birthday, i.class_name, i.breed, i.learned_commands) for i in self._data]
+        return [(i.Id, i.name, i.birthday, i.class_name, i.breed, i.learned_commands) for i in self._data]
 
     def _teach(self, animals_ids: list, new_command: str):
         if not self._teach_alert:
