@@ -11,13 +11,13 @@ def main():
         "man-friends.csv", ConsoleView)
     input_mode = True
     while input_mode:
-        try:
+        # try:
             input_mode = ar_app.start()
-        except IOError:
-            traceback.print_exc()
-            input_mode = False
-        except Exception as e:
-            print(e)
+        # except IOError:
+        #     traceback.print_exc()
+        #     input_mode = False
+        # except Exception as e:
+        #     print(e)
 
 
 if __name__ == '__main__':

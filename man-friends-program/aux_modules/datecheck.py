@@ -26,3 +26,17 @@ class DateCheck:
         if datetime.strptime(date_value, '%d.%m.%Y').date() > date.today():
             raise ValueError("Дата рождения больше даты сегодняшнего дня")
         return date_value
+
+    @staticmethod
+    def change_date_format(date: str):
+        DateCheck.is_date(date)
+        number = ""
+        date_numbers = []
+        for s in date:
+            if s == ".":
+                date_numbers.append(number)
+                number = ""
+            number += s
+        date_numbers.append(number)
+        new_date = f"{date_numbers[2]}-{date_numbers[1]}-{date_numbers[0]}".replace(".", "")
+        return new_date

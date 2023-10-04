@@ -59,16 +59,18 @@ class SQLConnect:
                     data.append(line)
         self.import_data(table_name, self.__create_values_sql_list(data, date_col))
 
-    def import_data(self, table_name: str, data: list):
+    def import_data(self, table_name: str, data):
+        print(*data, sep="\n")
         for row in data:
             self.__cursor.execute(f"INSERT INTO {table_name} VALUES {row};")
 
-    def __create_values_sql_list(self, values_list: list[str], date_column: int = None):
+    @staticmethod
+    def __create_values_sql_list(values_list: list[str], date_column: int = None):
         new_values_list = []
         if date_column:
             for i in range(len(values_list)):
                 row_data = values_list[i].split(";")
-                row_data[date_column] = self.__change_date_format(row_data[date_column])
+                row_data[date_column] = DateCheck.change_date_format(row_data[date_column])
                 values_list[i] = ";".join(row_data).replace("\n", "")
 
         for values in values_list:
@@ -78,19 +80,13 @@ class SQLConnect:
             new_values_list.append(values_string)
         return new_values_list
 
-    @staticmethod
-    def __change_date_format(date: str):
-        DateCheck.is_date(date)
-        number = ""
-        date_numbers = []
-        for s in date:
-            if s == ".":
-                date_numbers.append(number)
-                number = ""
-            number += s
-        date_numbers.append(number)
-        new_date = f"{date_numbers[2]}-{date_numbers[1]}-{date_numbers[0]}".replace(".", "")
-        return new_date
+    def update(self, table: str, field: str, new_value: str, condition: str):
+        self.execute(
+            f"UPDATE {table} SET {field} = '{new_value}' WHERE {condition};")
+
+    def delete(self, table: str, condition: str):
+        self.execute(
+            f"DELETE FROM {table} WHERE {condition};")
 
 
 if __name__ == '__main__':

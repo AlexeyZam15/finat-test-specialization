@@ -2,6 +2,7 @@ from aux_modules.datecheck import DateCheck
 
 
 class ParentClass:
+    date_col = 3
     __id_counter = 0
 
     input_fields = ["Имя", "Дата рождения"]
@@ -47,6 +48,12 @@ class ParentClass:
                   + f'{self.class_name:{ParentClass.field_width["Класс"]}}|{self.breed:{ParentClass.field_width["Порода"]}}|')
                  + f'{self.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
         return text
+
+    def get_fields(self):
+        return [(f'{self.Id}', f'{self.name}',
+                 f'{DateCheck.change_date_format(self.birthday)}',
+                 f'{self.class_name}', f'{self.breed}',
+                 f'{self.learned_commands}')]
 
     @property
     def name(self):
