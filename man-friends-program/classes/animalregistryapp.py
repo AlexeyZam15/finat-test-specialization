@@ -6,29 +6,35 @@ from classes.hamsters import Hamster
 from classes.horses import Horse
 from classes.parentclass import ParentClass
 from aux_modules.counter import Counter
-from aux_modules.data import Data
+from classes.data import Data
 from aux_modules.filemanager import FileManager
+from sqlconnect import SQLConnect
+import datetime
 
 
 class AnimalRegistryApp:
-    def __init__(self, file_path: str, view_class_name):
+    def __init__(self, sql_connect: SQLConnect, csv_file: str, view_class_name):
+        self.__sql_work_table = 'parent_class'
+        self.__sql_connect = sql_connect
         self.__view = None
-        self.__data = Data(list[ParentClass]())
+        self.__data = Data(list[ParentClass](), ParentClass.date_col)
 
         self.__view_class_name = view_class_name
 
         self.__actions = {'1': 'список животных',
                           '2': 'добавить животное',
-                          '3': 'обучить команде'}
+                          '3': 'обучить команде',
+                          '4': 'удалить животное'}
 
-        self.__functions = {'1': self.show_all,
-                            '2': self.add_new,
-                            '3': self.teach_command}
+        self.__functions = {'1': self.__show_all,
+                            '2': self.__add_new,
+                            '3': self.__teach_command,
+                            '4': self.__delete_animal}
 
         try:
-            self.__file_manager = FileManager(file_path)
+            self.__file_manager = FileManager(csv_file)
         except:
-            raise IOError("Ошибка работы с файлом " + file_path)
+            raise IOError("Ошибка работы с файлом " + csv_file)
 
         self.__child_classes_names = {"1": "Верблюд",
                                       "2": "Лошадь",
@@ -38,12 +44,12 @@ class AnimalRegistryApp:
                                       "6": "Хомяк",
                                       }
 
-        self.__child_classes_functions = {"1": self.create_child,
-                                          "2": self.create_child,
-                                          "3": self.create_child,
-                                          "4": self.create_child,
-                                          "5": self.create_child,
-                                          "6": self.create_child
+        self.__child_classes_functions = {"1": self.__add_child,
+                                          "2": self.__add_child,
+                                          "3": self.__add_child,
+                                          "4": self.__add_child,
+                                          "5": self.__add_child,
+                                          "6": self.__add_child
                                           }
 
         self.__child_classes_parameters = {"1": Camel,
@@ -68,22 +74,25 @@ class AnimalRegistryApp:
 
     def start(self):
         self.__view = self.__view_class_name()
-
         self.__view.set_program_title(self.__title)
-        self.__data = Data(list[ParentClass]())
+        self.__data = Data(list[ParentClass](), ParentClass.date_col)
         ParentClass.id_counter_reset()
-        self.__file_manager.create_objects_from_clv(self.create_child, self.__child_classes_ratio, ParentClass)
+        self.__create_objects_from_sql(self.__create_child, self.__child_classes_ratio, ParentClass)
+        self.__show_all()
+        # self.__file_manager.create_objects_from_clv(self.__create_child, self.__child_classes_ratio, ParentClass)
         action = True
         while action:
             action = self.__view.choose_input(self.__actions, self.__functions, 'Какое действие хотите совершить?')
+        self.__file_manager.write_data_to_file(self.__data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
         if not action:
             return False
 
-    def show_all(self):
+    def __show_all(self):
         if len(self.__data):
             text = " ".join([f'{i:{ParentClass.field_width[i]}}' for i in ParentClass.field_width])
             for i in self.__data:
-                text += (f'\n{i.id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|' +
+                text += (f'\n{i.Id:{ParentClass.field_width["Id"]}}|{i.name:{ParentClass.field_width["Имя"]}}|' +
                          f'{i.birthday:{ParentClass.field_width["Дата рождения"]}}|' +
                          f'{i.class_name:{ParentClass.field_width["Класс"]}}|{i.breed:{ParentClass.field_width["Порода"]}}|' +
                          f'{i.learned_commands:{ParentClass.field_width["Выученные команды"]}}')
@@ -91,9 +100,13 @@ class AnimalRegistryApp:
         else:
             self.__view.print_msg("Список животных пуст")
 
-    def add_new(self):
+    def __add_new(self):
         action = self.__view.choose_input(self.__child_classes_names, self.__child_classes_functions,
                                           'Выберите класс нового животного:', self.__child_classes_parameters)
+
+    def __add_child(self, class_name, data: list = None):
+        child = self.__create_child(class_name, data)
+        self.__sql_connect.import_data(self.__sql_work_table, child.get_fields())
 
     def __input_fields(self, input_fields: list):
         self.__view.print_msg('Заполните поля:')
@@ -102,7 +115,7 @@ class AnimalRegistryApp:
             data.append(self.__view.input_func(f'{input_fields[i]}: '))
         return data
 
-    def create_child(self, class_name, data: list = None):
+    def __create_child(self, class_name, data: list = None):
         if not data:
             data = self.__input_fields(class_name.input_fields)
         child = class_name(*data)
@@ -112,11 +125,11 @@ class AnimalRegistryApp:
 
         self.__data.append(child)
 
-        self.__file_manager.write_data_to_file(self.__data)
+        return child
 
-    def teach_command(self):
+    def __teach_command(self):
         id_value = self.__view.input_func("Введите id животного, которого хотите научить команде: ")
-        animal: ParentClass = self.__data.get_by_param("id", id_value)
+        animal: ParentClass = self.__data.get_by_param("Id", id_value)
         if animal:
             command = self.__view.input_func("Введите название новой команды: ")
             if animal.learned_commands:
@@ -125,4 +138,33 @@ class AnimalRegistryApp:
                 animal.learned_commands = f"{command}"
         else:
             self.__view.print_msg('Введён неверный id')
-        self.__file_manager.write_data_to_file(self.__data)
+        self.__sql_connect.update(self.__sql_work_table, 'learned_commands', animal.learned_commands,
+                                  f'Id = {animal.Id}')
+
+    def __create_objects_from_sql(self, create_object_func, name_class_ratio, exception_class):
+        sql_data = self.__sql_connect.execute(f"SELECT * FROM {self.__sql_work_table}")
+        for data in sql_data:
+            try:
+                if data[3] != "Не определено":
+                    create_object_func(name_class_ratio[data[3]], data[1:3] + data[4:6])
+                else:
+                    create_object_func(exception_class, data[1:3] + data[4:6])
+            except Exception as e:
+                raise IOError(f"Ошибка с чтением данных из "
+                              f"таблицы {self.__sql_work_table} базы данных {self.__sql_connect.database}")
+
+        self.__file_manager.write_data_to_file(self.__data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
+
+    def __delete_animal(self):
+        id_value = self.__view.input_func("Введите id животного, которого хотите удалить: ")
+        animal: ParentClass = self.__data.get_by_param("Id", id_value)
+        if animal:
+            action = self.__view.input_func("y - подтвердить удаление: ")
+            if action == "y":
+                self.__data.remove(animal)
+                self.__sql_connect.delete(self.__sql_work_table, f'Id = {id_value}')
+            else:
+                self.__view.print_msg('Удаление отменено')
+        else:
+            self.__view.print_msg('Введён неверный id')

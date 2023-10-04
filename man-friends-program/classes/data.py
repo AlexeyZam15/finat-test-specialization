@@ -2,7 +2,8 @@ import datetime
 
 
 class Data:
-    def __init__(self, data: list):
+    def __init__(self, data: list, date_col: int = None):
+        self.date_col = date_col
         self.creation_date = datetime.datetime.today()
         self.__data = data
 
