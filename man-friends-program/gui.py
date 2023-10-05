@@ -26,6 +26,8 @@ from functools import partial
 from kivy.clock import Clock
 from kivy.config import Config
 
+from sqlconnect import SQLConnect
+
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.set('graphics', 'resizable', '0')
 
@@ -34,9 +36,9 @@ Window.title = "Реестр животных"
 
 
 class AnimalRegistry:
-    def __init__(self):
+    def __init__(self, sql_connect: SQLConnect, csv_file: str):
         try:
-            self.__file_manager = FileManager("man-friends2.csv")
+            self.__file_manager = FileManager(csv_file)
         except IOError as e:
             raise IOError("Ошибка работы с файлом " + e.filename)
 
@@ -52,8 +54,17 @@ class AnimalRegistry:
 
         self._data = Data(list[ParentClass]())
         ParentClass.id_counter_reset()
-        self.__file_manager.create_objects_from_clv(self._create_child, self._child_classes_ratio,
-                                                    ParentClass)
+
+        self._sql_connect = sql_connect
+
+        self._sql_connect.create_objects_from_sql(self._create_child, self._child_classes_ratio,
+                                                  ParentClass)
+
+        self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
+
+        # self.__file_manager.create_objects_from_clv(self._create_child, self._child_classes_ratio,
+        #                                             ParentClass)
 
         self._buttons_names_functions = {'добавить': self._add_new,
                                          'обучить команде': self._teach_command,
@@ -66,6 +77,9 @@ class AnimalRegistry:
     def _teach_command(self, event):
         pass
 
+    def _animals_delete_command(self, event):
+        pass
+
     def _create_child(self, class_name, data: list = None):
         child = class_name(*data)
 
@@ -74,8 +88,7 @@ class AnimalRegistry:
 
         self._data.append(child)
 
-        self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
-                                               ParentClass.fields_names_ids.values())
+        return child
 
     def _teach(self, animals_ids: list, new_command: str):
         error_text = ""
@@ -88,27 +101,27 @@ class AnimalRegistry:
                 animal.learned_commands += f", {new_command}"
             else:
                 animal.learned_commands = f"{new_command}"
+            self._sql_connect.update('learned_commands', animal.learned_commands, f'Id = {i}')
 
         self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
                                                ParentClass.fields_names_ids.values())
         if error_text:
             raise ValueError(error_text)
 
-    def _animals_delete_command(self, event):
-        pass
-
     def _animals_delete(self, animals_ids):
         for i in animals_ids:
             animal = self._data.get_by_param('Id', i)
             self._data.remove(animal)
+            self._sql_connect.delete(f"Id = {i}")
+
         self.__file_manager.write_data_to_file(self._data, ParentClass.fields_names_ids.keys(),
                                                ParentClass.fields_names_ids.values())
 
 
-class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
-    def __init__(self, *args, **kwargs):
+class AnimalMDScreen(AnimalRegistry, MDFloatLayout):
+    def __init__(self, sql_connect, csv_file: str = "man-friends2.csv", *args, **kwargs):
+        AnimalRegistry.__init__(self, sql_connect, csv_file)
         MDFloatLayout.__init__(self, *args, **kwargs)
-        AnimalRegistry.__init__(self)
 
         self._text_field_values = None
         self._adding_dialog = None
@@ -213,11 +226,13 @@ class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
                 ],
             )
         try:
-            self._create_child(self.__get_class_by_name(text_fields_greed.ids.class_name.text),
-                               data)
+            child = self._create_child(self.__get_class_by_name(text_fields_greed.ids.class_name.text),
+                                       data)
+            self._sql_connect.import_data(child.get_fields())
         except Exception as e:
             self._adding_alert.title = str(e)
             self._adding_alert.open()
+
         self._view_update()
         self._dialog_close(self._adding_dialog)
 
@@ -302,7 +317,11 @@ class AnimalMDScreen(MDFloatLayout, AnimalRegistry):
         return [i[0] for i in self._view.get_row_checks()]
 
     def _animals_delete(self, animals_ids):
-        super()._animals_delete(animals_ids)
+        try:
+            super()._animals_delete(animals_ids)
+        except Exception as e:
+            self._teach_alert.title = str(e)
+            self._teach_alert.open()
         self._view_update()
         self._dialog_close(self._delete_dialog)
 
@@ -343,7 +362,8 @@ class Gui(MDApp):
         super().__init__()
 
     def build(self):
-        return AnimalMDScreen()
+        return AnimalMDScreen(SQLConnect(
+            "localhost", "root", input("Enter mysql password: "), "man_friends_db", "parent_class"), "man-friends2.csv")
 
 
 if __name__ == "__main__":
