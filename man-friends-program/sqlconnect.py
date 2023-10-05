@@ -13,7 +13,8 @@ class SQLConnect:
             host=host,
             user=user,
             passwd=passwd,
-            database=database
+            database=database,
+            autocommit=True
         )
         self.__cursor = self.__mydb.cursor()
         self.__main_table = main_table
@@ -57,12 +58,12 @@ class SQLConnect:
             for line in file[1:]:
                 if line != "\n":
                     data.append(line)
-        self.import_data(table_name, self.__create_values_sql_list(data, date_col))
+        self.import_data(self.__create_values_sql_list(data, date_col))
 
-    def import_data(self, table_name: str, data):
+    def import_data(self, data):
         print(*data, sep="\n")
         for row in data:
-            self.__cursor.execute(f"INSERT INTO {table_name} VALUES {row};")
+            self.__cursor.execute(f"INSERT INTO {self.__main_table} VALUES {row};")
 
     @staticmethod
     def __create_values_sql_list(values_list: list[str], date_column: int = None):
@@ -80,13 +81,25 @@ class SQLConnect:
             new_values_list.append(values_string)
         return new_values_list
 
-    def update(self, table: str, field: str, new_value: str, condition: str):
+    def update(self, field: str, new_value: str, condition: str):
         self.execute(
-            f"UPDATE {table} SET {field} = '{new_value}' WHERE {condition};")
+            f"UPDATE {self.__main_table} SET {field} = '{new_value}' WHERE {condition};")
 
-    def delete(self, table: str, condition: str):
+    def delete(self,condition: str):
         self.execute(
-            f"DELETE FROM {table} WHERE {condition};")
+            f"DELETE FROM {self.__main_table} WHERE {condition};")
+
+    def create_objects_from_sql(self, create_object_func, name_class_ratio, exception_class):
+        sql_data = self.execute(f"SELECT * FROM {self.__main_table}")
+        for data in sql_data:
+            try:
+                if data[3] != "Не определено":
+                    create_object_func(name_class_ratio[data[3]], data[1:3] + data[4:6])
+                else:
+                    create_object_func(exception_class, data[1:3] + data[4:6])
+            except Exception as e:
+                raise IOError(f"Ошибка с чтением данных из "
+                              f"таблицы {self.__main_table} базы данных {self.__database}")
 
 
 if __name__ == '__main__':

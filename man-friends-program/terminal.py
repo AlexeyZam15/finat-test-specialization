@@ -1,13 +1,11 @@
-import traceback
-
-from classes.animalregistryapp import AnimalRegistryApp
+from animalregistryapp import AnimalRegistryApp
 from sqlconnect import SQLConnect
 from views.console_view import ConsoleView
 
 
 def main():
     ar_app = AnimalRegistryApp(
-        SQLConnect("localhost", "root", input("Enter password: "), "man_friends_db", "parent_class"),
+        SQLConnect("localhost", "root", input("Enter mysql password: "), "man_friends_db", "parent_class"),
         "man-friends.csv", ConsoleView)
     input_mode = True
     while input_mode:

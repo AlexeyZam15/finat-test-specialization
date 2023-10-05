@@ -14,7 +14,6 @@ import datetime
 
 class AnimalRegistryApp:
     def __init__(self, sql_connect: SQLConnect, csv_file: str, view_class_name):
-        self.__sql_work_table = 'parent_class'
         self.__sql_connect = sql_connect
         self.__view = None
         self.__data = Data(list[ParentClass](), ParentClass.date_col)
@@ -77,7 +76,11 @@ class AnimalRegistryApp:
         self.__view.set_program_title(self.__title)
         self.__data = Data(list[ParentClass](), ParentClass.date_col)
         ParentClass.id_counter_reset()
-        self.__create_objects_from_sql(self.__create_child, self.__child_classes_ratio, ParentClass)
+
+        self.__sql_connect.create_objects_from_sql(self.__create_child, self.__child_classes_ratio, ParentClass)
+
+        self.__file_manager.write_data_to_file(self.__data, ParentClass.fields_names_ids.keys(),
+                                               ParentClass.fields_names_ids.values())
         self.__show_all()
         # self.__file_manager.create_objects_from_clv(self.__create_child, self.__child_classes_ratio, ParentClass)
         action = True
@@ -101,12 +104,12 @@ class AnimalRegistryApp:
             self.__view.print_msg("Список животных пуст")
 
     def __add_new(self):
-        action = self.__view.choose_input(self.__child_classes_names, self.__child_classes_functions,
-                                          'Выберите класс нового животного:', self.__child_classes_parameters)
+        self.__view.choose_input(self.__child_classes_names, self.__child_classes_functions,
+                                 'Выберите класс нового животного:', self.__child_classes_parameters)
 
     def __add_child(self, class_name, data: list = None):
         child = self.__create_child(class_name, data)
-        self.__sql_connect.import_data(self.__sql_work_table, child.get_fields())
+        self.__sql_connect.import_data(child.get_fields())
 
     def __input_fields(self, input_fields: list):
         self.__view.print_msg('Заполните поля:')
@@ -138,23 +141,8 @@ class AnimalRegistryApp:
                 animal.learned_commands = f"{command}"
         else:
             self.__view.print_msg('Введён неверный id')
-        self.__sql_connect.update(self.__sql_work_table, 'learned_commands', animal.learned_commands,
+        self.__sql_connect.update('learned_commands', animal.learned_commands,
                                   f'Id = {animal.Id}')
-
-    def __create_objects_from_sql(self, create_object_func, name_class_ratio, exception_class):
-        sql_data = self.__sql_connect.execute(f"SELECT * FROM {self.__sql_work_table}")
-        for data in sql_data:
-            try:
-                if data[3] != "Не определено":
-                    create_object_func(name_class_ratio[data[3]], data[1:3] + data[4:6])
-                else:
-                    create_object_func(exception_class, data[1:3] + data[4:6])
-            except Exception as e:
-                raise IOError(f"Ошибка с чтением данных из "
-                              f"таблицы {self.__sql_work_table} базы данных {self.__sql_connect.database}")
-
-        self.__file_manager.write_data_to_file(self.__data, ParentClass.fields_names_ids.keys(),
-                                               ParentClass.fields_names_ids.values())
 
     def __delete_animal(self):
         id_value = self.__view.input_func("Введите id животного, которого хотите удалить: ")
@@ -163,7 +151,7 @@ class AnimalRegistryApp:
             action = self.__view.input_func("y - подтвердить удаление: ")
             if action == "y":
                 self.__data.remove(animal)
-                self.__sql_connect.delete(self.__sql_work_table, f'Id = {id_value}')
+                self.__sql_connect.delete(f'Id = {id_value}')
             else:
                 self.__view.print_msg('Удаление отменено')
         else:
